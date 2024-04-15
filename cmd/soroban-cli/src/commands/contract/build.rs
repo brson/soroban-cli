@@ -35,6 +35,9 @@ pub struct Cmd {
     #[arg(long, default_value = "release")]
     pub profile: String,
     /// Build with the list of features activated, space or comma separated
+    /// Require Cargo.lock is up to date
+    #[arg(long)]
+    pub locked: bool,
     #[arg(long, help_heading = "Features")]
     pub features: Option<String>,
     /// Build with the all features activated
@@ -111,6 +114,9 @@ impl Cmd {
                 cmd.arg("--release");
             } else {
                 cmd.arg(format!("--profile={}", self.profile));
+            }
+            if self.locked {
+                cmd.arg("--locked");
             }
             if self.all_features {
                 cmd.arg("--all-features");
