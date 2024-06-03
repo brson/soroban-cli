@@ -6,6 +6,7 @@ use std::{
     process::{Command, ExitStatus},
 };
 use stellar_xdr::curr::ScMetaEntry;
+use crate::repro_utils;
 
 const CONTRACT_REPRO_PATH: &str = "contract-repro";
 
@@ -35,6 +36,8 @@ pub enum Error {
     ClosingTempDir(io::Error),
     #[error(transparent)]
     Utf8(std::str::Utf8Error),
+    #[error(transparent)]
+    Repro(#[from] repro_utils::Error),
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -112,7 +115,8 @@ impl Cmd {
         git_cmd.args(["reset", "--hard", &metadata.commit_hash]);
         git_cmd.status().map_err(Error::GitCmd)?;
 
-        let mut soroban_cmd = Command::new("soroban");
+        let soroban_path = std::env::current_exe().unwrap();
+        let mut soroban_cmd = Command::new(&soroban_path);
         soroban_cmd.args([
             "contract",
             "build",
@@ -156,7 +160,7 @@ impl Cmd {
             let mut wasm_out = repro_dir.join(&file_name);
             wasm_out.set_extension("optimized.wasm");
 
-            let mut soroban_cmd = Command::new("soroban");
+            let mut soroban_cmd = Command::new(&soroban_path);
             soroban_cmd.args([
                 "contract",
                 "optimize",
@@ -198,7 +202,7 @@ impl Cmd {
     }
 
     fn load_contract_metadata(&self) -> Result<ContractMetadata, Error> {
-        let metadata = self.wasm.read_contract_metadata()?;
+        let metadata = repro_utils::read_wasm_contractmeta_file(&self.wasm.wasm)?;
 
         let mut contract_metadata = ContractMetadata::default();
         metadata.iter().for_each(|ScMetaEntry::ScMetaV0(data)| {

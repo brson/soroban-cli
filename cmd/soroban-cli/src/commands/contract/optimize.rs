@@ -6,6 +6,7 @@ use std::{fs, io};
 use stellar_xdr::curr::{ScMetaEntry, ScMetaV0, StringM};
 #[cfg(feature = "opt")]
 use wasm_opt::{Feature, OptimizationError, OptimizationOptions};
+use crate::repro_utils;
 
 #[derive(Parser, Debug, Clone)]
 #[group(skip)]
@@ -31,6 +32,8 @@ pub enum Error {
     WritingFile(io::Error),
     #[error("copying wasm file: {0}")]
     CopyingFile(io::Error),
+    #[error(transparent)]
+    Repro(#[from] repro_utils::Error),
 }
 
 impl Cmd {
@@ -95,7 +98,7 @@ impl Cmd {
             val: StringM::from_str("true").expect("StringM"),
         });
 
-        let wasm_buf = self.wasm.update_customsection_metadata(meta_entry)?;
+        let wasm_buf = repro_utils::update_customsection_metadata(&self.wasm.wasm, meta_entry)?;
 
         let temp_file = format!(
             "{}.{}.temp",
@@ -110,7 +113,7 @@ impl Cmd {
     }
 
     fn is_already_optimized(&self) -> Result<bool, Error> {
-        let metadata = self.wasm.read_contract_metadata()?;
+        let metadata = repro_utils::read_wasm_contractmeta_file(&self.wasm.wasm)?;
 
         let mut is_optimized = false;
         metadata.iter().for_each(|ScMetaEntry::ScMetaV0(data)| {
