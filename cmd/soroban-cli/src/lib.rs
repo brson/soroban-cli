@@ -15,10 +15,10 @@ pub mod commands;
 pub mod fee;
 pub mod key;
 pub mod log;
+pub mod repro_utils;
 pub mod toid;
 pub mod utils;
 pub mod wasm;
-pub mod repro_utils;
 
 pub use commands::Root;
 
