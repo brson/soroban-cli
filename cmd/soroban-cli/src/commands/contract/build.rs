@@ -124,14 +124,10 @@ impl Cmd {
         if !self.locked {
             eprintln!(
                 "{}",
-                "Warning: Building without `--locked`. Build will not be reproducible. Press any key to continue..."
+                "Warning: Building without `--locked`. Build will not be reproducible."
                     .red()
                     .bold()
             );
-            let mut input = String::new();
-            io::stdin()
-                .read_line(&mut input)
-                .map_err(Error::ReadingUserInput)?;
         }
 
         let working_dir = env::current_dir().map_err(Error::GettingCurrentDir)?;
